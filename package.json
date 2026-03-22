@@ -6,8 +6,8 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build": "cd client && npm run build",
-    "start": "NODE_ENV=production cd server && npm start",
+    "build": "npm --prefix server install && npm --prefix client install && npm --prefix client run build",
+    "start": "NODE_ENV=production node server/src/index.js",
     "render-start": "NODE_ENV=production node server/src/index.js",
     "render-build": "npm install && cd server && npm install && cd ../client && npm install && npm run build",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
