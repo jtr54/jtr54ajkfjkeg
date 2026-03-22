@@ -7,7 +7,9 @@
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
     "build": "cd client && npm run build",
-    "start": "cd server && npm start",
+    "start": "NODE_ENV=production cd server && npm start",
+    "render-start": "NODE_ENV=production node server/src/index.js",
+    "render-build": "npm install && cd server && npm install && cd ../client && npm install && npm run build",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
   },
   "devDependencies": {
