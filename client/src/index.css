@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold
+           hover:bg-blue-700 active:bg-blue-800 transition-colors
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-blue-600 border-2 border-blue-600 px-6 py-3 rounded-xl font-semibold
+           hover:bg-blue-50 active:bg-blue-100 transition-colors;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+
+  .input-field {
+    @apply w-full border border-gray-200 rounded-xl px-4 py-3
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+           bg-white text-gray-900 placeholder-gray-400;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-red {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .stat-card {
+    @apply bg-blue-50 rounded-xl p-4 text-center;
+  }
+}
+
+/* Autocomplete dropdown */
+.autocomplete-dropdown {
+  @apply absolute z-50 w-full bg-white border border-gray-200 rounded-xl shadow-lg mt-1 overflow-hidden;
+}
+
+.autocomplete-item {
+  @apply px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0;
+  transition: background-color 0.15s;
+}
+
+/* Map */
+.map-container {
+  height: 400px;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Price range bar */
+.price-range-track {
+  @apply h-2 bg-gray-200 rounded-full relative overflow-hidden;
+}
+
+.price-range-fill {
+  @apply h-full bg-gradient-to-r from-green-400 to-blue-500 rounded-full;
+}
