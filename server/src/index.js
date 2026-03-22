@@ -10,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 if (!IS_PROD) {
   app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));

@@ -3,40 +3,32 @@ const NodeCache = require('node-cache');
 
 const cache = new NodeCache({ stdTTL: 3600 }); // 1 heure de cache
 
-const DVF_API_BASE = 'https://api.dvf.etalab.gouv.fr';
-
-const PROPERTY_TYPE_LABELS = {
-  Appartement: 'Appartement',
-  'Maison': 'Maison',
-  'Dépendance': 'Dépendance',
-  "Local d'activité": "Local d'activité",
-};
+const DVF_API_BASE = 'https://api.cquest.org/dvf';
 
 /**
  * Recherche les transactions DVF proches d'un point géographique
  */
 async function searchNearby({ lat, lon, radius = 1000, type_local, date_min, date_max, page = 1 }) {
-  const cacheKey = `nearby:${lat}:${lon}:${radius}:${type_local || 'all'}:${date_min || ''}:${date_max || ''}:${page}`;
+  const cacheKey = `nearby:${lat}:${lon}:${radius}:${type_local || 'all'}:${date_min || ''}:${date_max || ''}`;
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const params = {
-    lat,
-    lon,
-    radius,
-    page,
-    page_size: 50,
-  };
-
+  const params = { lat, lon, dist: Math.min(radius, 5000) };
   if (type_local) params.type_local = type_local;
-  if (date_min) params.date_mutation_min = date_min;
-  if (date_max) params.date_mutation_max = date_max;
 
-  const response = await axios.get(`${DVF_API_BASE}/dvf/mutations/`, { params, timeout: 10000 });
+  const response = await axios.get(DVF_API_BASE, { params, timeout: 15000 });
   const data = response.data;
 
-  cache.set(cacheKey, data);
-  return data;
+  // L'API retourne du GeoJSON : features[].properties
+  let mutations = (data.features || []).map(f => f.properties || f);
+
+  // Filtrage par date côté serveur
+  if (date_min) mutations = mutations.filter(m => m.date_mutation && m.date_mutation >= date_min);
+  if (date_max) mutations = mutations.filter(m => m.date_mutation && m.date_mutation <= date_max);
+
+  const result = { results: mutations, count: mutations.length };
+  cache.set(cacheKey, result);
+  return result;
 }
 
 /**
@@ -45,8 +37,7 @@ async function searchNearby({ lat, lon, radius = 1000, type_local, date_min, dat
 function computeStats(mutations, typeLocal) {
   const filtered = mutations.filter(m => {
     if (!typeLocal) return true;
-    return m.type_local === typeLocal ||
-      (m.lots && m.lots.some(l => l.type_local === typeLocal));
+    return m.type_local === typeLocal;
   });
 
   const pricesPerM2 = [];
@@ -89,24 +80,17 @@ function estimateValue({ surface, type_local, mutations }) {
   if (!surface || surface <= 0) return null;
 
   const comparable = mutations.filter(m => {
-    const mutType = m.type_local || (m.lots && m.lots[0]?.type_local);
-    if (type_local && mutType !== type_local) return false;
-
+    if (type_local && m.type_local !== type_local) return false;
     const s = parseFloat(m.surface_reelle_bati || m.surface_terrain);
     if (!s || s <= 0) return false;
-
     const v = parseFloat(m.valeur_fonciere);
     if (!v || v <= 0) return false;
-
-    // Filtrer les biens de taille similaire (±50%)
     return s >= surface * 0.5 && s <= surface * 1.5;
   });
 
   if (comparable.length < 3) {
-    // Si pas assez de comparables proches, utiliser tous les biens du même type
     const allSameType = mutations.filter(m => {
-      const mutType = m.type_local || (m.lots && m.lots[0]?.type_local);
-      if (type_local && mutType !== type_local) return false;
+      if (type_local && m.type_local !== type_local) return false;
       const s = parseFloat(m.surface_reelle_bati || m.surface_terrain);
       const v = parseFloat(m.valeur_fonciere);
       return s > 0 && v > 0;
